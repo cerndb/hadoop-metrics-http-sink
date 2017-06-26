@@ -1,37 +1,35 @@
-package org.apache.hadoop.metrics2.sink.elasticsearch;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.configuration.SubsetConfiguration;
-
-import org.apache.hadoop.metrics2.MetricsSink;
-import org.apache.hadoop.metrics2.util.Servers;
-import org.apache.hadoop.net.DNS;
-import org.codehaus.jackson.map.ObjectMapper;
+package ch.cern.hadoop.metrics2.sink.http;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 
-public abstract class AbstractElasticsearchMetricsSink implements MetricsSink {
+import org.apache.commons.configuration.SubsetConfiguration;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.metrics2.MetricsSink;
+import org.apache.hadoop.net.DNS;
+import org.codehaus.jackson.map.ObjectMapper;
+
+public abstract class AbstractHTTPMetricsSink implements MetricsSink {
+    
+    public final Log LOG = LogFactory.getLog(this.getClass());
+    
     public static final String COLLECTOR_HOST_PROPERTY = "collector";
 
     protected String hostName = "UNKNOWN.example.com";
-    private List<? extends SocketAddress> metricsServers;
+    
     private String collectorUri;
-
-    public final Log LOG = LogFactory.getLog(this.getClass());
+    
     private HttpClient httpClient = new HttpClient();
 
     protected static ObjectMapper mapper = new ObjectMapper();
 
     public void init(SubsetConfiguration conf) {
-        LOG.info("Initializing Elasticsearch metrics sink.");
+        LOG.info("Initializing HTTP metrics sink.");
 
         // Take the hostname from the DNS class.
         if (conf.getString("slave.host.name") != null) {
@@ -50,23 +48,20 @@ public abstract class AbstractElasticsearchMetricsSink implements MetricsSink {
         LOG.info("Identified hostname = " + hostName);
 
         // Load collector configs
-        metricsServers = Servers.parse(conf.getString(COLLECTOR_HOST_PROPERTY), 9200);
-
-        if (metricsServers == null || metricsServers.isEmpty()) {
+        String collectorUri = conf.getString(COLLECTOR_HOST_PROPERTY);
+        if (collectorUri == null) {
             LOG.error("No Metric collector configured.");
-        } else {
-            collectorUri = "http://" + conf.getString(COLLECTOR_HOST_PROPERTY).trim();
         }
 
         LOG.info("Collector Uri: " + collectorUri);
     }
 
-    protected void emitMetrics(String index, String type, ElasticsearchMetric metrics) throws IOException {
-        String connectUrl = getCollectorUri() + "/" + index + "/" + type;
+    protected void emitMetrics(HTTPMetric metrics) throws IOException {
+        String connectUrl = getCollectorUri();
         LOG.debug("connectUrl: " + connectUrl);
         try {
             String jsonData = mapper.writeValueAsString(metrics);
-            LOG.debug("Json elasticsearch metrics: " + jsonData);
+            LOG.debug("Json HTTP metrics: " + jsonData);
 
             StringRequestEntity requestEntity = new StringRequestEntity(jsonData, "application/json", "UTF-8");
             PostMethod postMethod = new PostMethod(connectUrl);

@@ -8,7 +8,7 @@ sourceCompatibility = 1.5
 version = '1.0'
 group = 'com.teraproc'
 
-jar { baseName = 'hadoop-metrics-elasticsearch-sink' }
+jar { baseName = 'hadoop-metrics-http-sink' }
 
 repositories {
     mavenCentral()

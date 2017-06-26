@@ -1,4 +1,4 @@
-package org.apache.hadoop.metrics2.sink.elasticsearch;
+package ch.cern.hadoop.metrics2.sink.http;
 
 public class UnableToConnectException extends RuntimeException {
     private static final long serialVersionUID = 1L;
