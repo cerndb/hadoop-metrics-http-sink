@@ -10,29 +10,33 @@ import java.util.*;
 
 public class HTTPMetricsSink extends AbstractHTTPMetricsSink {
     
-    public static final String TAGS_PARAM = "tags";
-    private Map<String, String> tags;
+    public static final String EXTRA_ATTS_PARAM = "extraAttributes";
+    private Map<String, String> extraAttributes;
 
     @Override
     public void init(SubsetConfiguration conf) {
         super.init(conf);
         
-        tags = parseTags(conf);
+        extraAttributes = parsEextraAttributes(conf);
     }
 
-    private Map<String, String> parseTags(SubsetConfiguration conf) {
-        HashMap<String, String> tags = new HashMap<String, String>();
+    private Map<String, String> parsEextraAttributes(SubsetConfiguration conf) {
+        HashMap<String, String> extra_att = new HashMap<String, String>();
         
-        String[] tags_splitted = conf.getString(TAGS_PARAM).split(" ");
+        String extra_att_string = conf.getString(EXTRA_ATTS_PARAM);
+        if(extra_att_string == null)
+            return extra_att;
         
-        for (String tag : tags_splitted) {
-            String key = tag;
-            String value = conf.getString(TAGS_PARAM + "." + key);
+        String[] extra_att_splitted = extra_att_string.split(" ");
+        
+        for (String extra_attribute : extra_att_splitted) {
+            String key = extra_attribute;
+            String value = conf.getString(EXTRA_ATTS_PARAM + "." + key);
             
-            tags.put(key, value);
+            extra_att.put(key, value);
         }
         
-        return tags;
+        return extra_att;
     }
 
     public void putMetrics(MetricsRecord record) {
@@ -44,7 +48,7 @@ public class HTTPMetricsSink extends AbstractHTTPMetricsSink {
             httpMetric.setUpdateTime(record.timestamp());
             httpMetric.setHostName(hostName);
             httpMetric.setContext(context);
-            httpMetric.setTags(tags);
+            httpMetric.setExtraAttributes(extraAttributes);
 
             Map<String, String> metricMap = new HashMap<String, String>();
             for (AbstractMetric metric : metrics) {
@@ -60,8 +64,8 @@ public class HTTPMetricsSink extends AbstractHTTPMetricsSink {
         }
     }
     
-    public Map<String, String> getTags(){
-        return tags;
+    public Map<String, String> getExtraAttributes(){
+        return extraAttributes;
     }
     
 }

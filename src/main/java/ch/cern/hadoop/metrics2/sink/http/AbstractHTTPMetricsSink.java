@@ -12,7 +12,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.MetricsSink;
 import org.apache.hadoop.net.DNS;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public abstract class AbstractHTTPMetricsSink implements MetricsSink {
     
@@ -25,8 +24,6 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
     private String collectorUri;
     
     private HttpClient httpClient = new HttpClient();
-
-    protected static ObjectMapper mapper = new ObjectMapper();
 
     public void init(SubsetConfiguration conf) {
         LOG.info("Initializing HTTP metrics sink.");
@@ -60,10 +57,10 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
         String connectUrl = getCollectorUri();
         LOG.debug("connectUrl: " + connectUrl);
         try {
-            String jsonData = mapper.writeValueAsString(metrics);
-            LOG.debug("Json HTTP metrics: " + jsonData);
+            String content = metrics.toJSON();
+            LOG.debug("Json HTTP metrics: " + content);
 
-            StringRequestEntity requestEntity = new StringRequestEntity(jsonData, "application/json", "UTF-8");
+            StringRequestEntity requestEntity = new StringRequestEntity(content, "application/json", "UTF-8");
             PostMethod postMethod = new PostMethod(connectUrl);
             postMethod.setRequestEntity(requestEntity);
             int statusCode = httpClient.executeMethod(postMethod);
