@@ -45,7 +45,7 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
         LOG.info("Identified hostname = " + hostName);
 
         // Load collector configs
-        String collectorUri = conf.getString(COLLECTOR_HOST_PROPERTY);
+        collectorUri = conf.getString(COLLECTOR_HOST_PROPERTY);
         if (collectorUri == null) {
             LOG.error("No Metric collector configured.");
         }
