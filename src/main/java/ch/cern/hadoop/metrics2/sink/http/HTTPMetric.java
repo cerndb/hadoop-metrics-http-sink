@@ -17,7 +17,7 @@ public class HTTPMetric  {
     protected static ObjectMapper mapper = new ObjectMapper();
     
     @JsonIgnore //This date format is automatically interpreted as date by Elastic
-    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z");
+    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
     
     private String updateTime;
     private String hostName;
