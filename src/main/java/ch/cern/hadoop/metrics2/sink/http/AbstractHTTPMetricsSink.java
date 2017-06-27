@@ -1,17 +1,25 @@
 package ch.cern.hadoop.metrics2.sink.http;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 import org.apache.commons.configuration.SubsetConfiguration;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.MetricsSink;
 import org.apache.hadoop.net.DNS;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 public abstract class AbstractHTTPMetricsSink implements MetricsSink {
     
@@ -21,19 +29,12 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
     private String collectorUri;
     
     public static final String AUTH_PROPERTY = "auth";
-    private boolean authentication = false;
-    
     public static final String AUTH_USERNAME_PROPERTY = AUTH_PROPERTY + ".user";
-    private String username = "";
-    
     public static final String AUTH_PASSWORD_PROPERTY = AUTH_PROPERTY + ".password";
-    private String password = "";
 
     protected String hostName = "UNKNOWN.example.com";
     
-    
-    
-    private HttpClient httpClient = new HttpClient();
+    private CloseableHttpClient httpClient;
 
     public void init(SubsetConfiguration conf) {
         LOG.info("Initializing HTTP metrics sink.");
@@ -61,14 +62,25 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
         }
         
         // Authentication configs
-        authentication = conf.getBoolean(AUTH_PROPERTY, false);
+        boolean authentication = conf.getBoolean(AUTH_PROPERTY, false);
         if(authentication){
-            username = conf.getString(AUTH_USERNAME_PROPERTY);
-            password = conf.getString(AUTH_PASSWORD_PROPERTY);
+            String username = conf.getString(AUTH_USERNAME_PROPERTY);
+            String password = conf.getString(AUTH_PASSWORD_PROPERTY);
+            
+            CredentialsProvider provider = new BasicCredentialsProvider();
+            UsernamePasswordCredentials credentials = new UsernamePasswordCredentials(username, password);
+            provider.setCredentials(AuthScope.ANY, credentials);
+            
+            httpClient = HttpClientBuilder.create()
+                    .setDefaultCredentialsProvider(provider)
+                    .build();
+            
+            LOG.info("Collector Uri: " + collectorUri + " (authentication enabled, user: " + username + ")");
+        }else{
+            httpClient = HttpClientBuilder.create().build();
+            
+            LOG.info("Collector Uri: " + collectorUri);
         }
-
-        LOG.info("Collector Uri: " + collectorUri 
-                + (authentication ? " (authentication enabled, user: " + username + ")":""));
     }
 
     protected void emitMetrics(HTTPMetric metrics) throws IOException {
@@ -77,13 +89,18 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
         try {
             String content = metrics.toJSON();
             LOG.debug("Json HTTP metrics: " + content);
-
-            StringRequestEntity requestEntity = new StringRequestEntity(content, "application/json", "UTF-8");
-            PostMethod postMethod = new PostMethod(connectUrl);
-            postMethod.setRequestEntity(requestEntity);
-            int statusCode = httpClient.executeMethod(postMethod);
+            
+            HttpPost postMethod = new HttpPost(connectUrl);
+            postMethod.addHeader("Content-Type", "application/json");
+            postMethod.setEntity(new StringEntity(content, "UTF-8"));
+            
+            CloseableHttpResponse response = httpClient.execute(postMethod);
+            
+            int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode != 201) {
-                LOG.error("Unable to POST metrics to collector=" + connectUrl + " with status code=" + statusCode);
+                LOG.error("Unable to POST metrics to collector=" + connectUrl + " with status code=" + statusCode
+                        + "\n Response: " + response
+                        + "\n Response content: " + convertStreamToString(response.getEntity().getContent()));
             } else {
                 LOG.debug("Metrics posted to Collector " + connectUrl);
             }
@@ -91,8 +108,15 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
             throw new UnableToConnectException(e).setConnectUrl(connectUrl);
         }
     }
+    
+    static String convertStreamToString(InputStream is) {
+        @SuppressWarnings("resource")
+        Scanner s = new Scanner(is).useDelimiter("\\A");
+        
+        return s.hasNext() ? s.next() : "";
+    }
 
-    public void setHttpClient(HttpClient httpClient) {
+    public void setHttpClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
