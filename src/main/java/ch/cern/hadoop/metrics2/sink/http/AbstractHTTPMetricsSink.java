@@ -18,10 +18,20 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
     public final Log LOG = LogFactory.getLog(this.getClass());
     
     public static final String COLLECTOR_HOST_PROPERTY = "collector";
+    private String collectorUri;
+    
+    public static final String AUTH_PROPERTY = "auth";
+    private boolean authentication = false;
+    
+    public static final String AUTH_USERNAME_PROPERTY = AUTH_PROPERTY + ".user";
+    private String username = "";
+    
+    public static final String AUTH_PASSWORD_PROPERTY = AUTH_PROPERTY + ".password";
+    private String password = "";
 
     protected String hostName = "UNKNOWN.example.com";
     
-    private String collectorUri;
+    
     
     private HttpClient httpClient = new HttpClient();
 
@@ -49,8 +59,16 @@ public abstract class AbstractHTTPMetricsSink implements MetricsSink {
         if (collectorUri == null) {
             LOG.error("No Metric collector configured.");
         }
+        
+        // Authentication configs
+        authentication = conf.getBoolean(AUTH_PROPERTY, false);
+        if(authentication){
+            username = conf.getString(AUTH_USERNAME_PROPERTY);
+            password = conf.getString(AUTH_PASSWORD_PROPERTY);
+        }
 
-        LOG.info("Collector Uri: " + collectorUri);
+        LOG.info("Collector Uri: " + collectorUri 
+                + (authentication ? " (authentication enabled, user: " + username + ")":""));
     }
 
     protected void emitMetrics(HTTPMetric metrics) throws IOException {
