@@ -1,6 +1,7 @@
 package ch.cern.hadoop.metrics2.sink.http;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -19,7 +20,9 @@ public class HTTPMetricTest {
         
         HTTPMetric metric = new HTTPMetric();
         
-        metric.setUpdateTime(12345);
+        long currentTime = System.currentTimeMillis();
+        
+        metric.setUpdateTime(currentTime);
         
         HashMap<String, String> extraAttributes = new HashMap<String, String>();
         extraAttributes.put("att1", "val1");
@@ -31,7 +34,8 @@ public class HTTPMetricTest {
         JsonElement element = parser.parse(metric.toJSON());
         JsonObject jsonParsed = element.getAsJsonObject();
         
-        Assert.assertEquals(12345, jsonParsed.get("updateTime").getAsLong());
+        Assert.assertEquals(HTTPMetric.DATE_FORMAT.format(new Date(currentTime)), 
+                            jsonParsed.get("updateTime").getAsString());
         
         Assert.assertEquals("val1", jsonParsed.get("att1").getAsString());
         Assert.assertEquals("val2", jsonParsed.get("att2").getAsString());

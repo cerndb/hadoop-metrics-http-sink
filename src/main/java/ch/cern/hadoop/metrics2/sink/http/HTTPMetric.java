@@ -1,6 +1,8 @@
 package ch.cern.hadoop.metrics2.sink.http;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -14,7 +16,10 @@ public class HTTPMetric  {
     @JsonIgnore
     protected static ObjectMapper mapper = new ObjectMapper();
     
-    private long updateTime;
+    @JsonIgnore //This date format is automatically interpreted as date by Elastic
+    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    
+    private String updateTime;
     private String hostName;
     private String context;
     
@@ -23,12 +28,12 @@ public class HTTPMetric  {
     @JsonIgnore
     private Map<String, String> extraAttributes;
 
-    public long getUpdateTime() {
+    public String getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(long updateTime) {
-        this.updateTime = updateTime;
+    public void setUpdateTime(long updateTime_ms) {
+        this.updateTime = DATE_FORMAT.format(new Date(updateTime_ms));
     }
 
     public String getHostName() {
