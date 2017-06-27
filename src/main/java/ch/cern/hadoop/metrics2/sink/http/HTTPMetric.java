@@ -47,10 +47,12 @@ public class HTTPMetric  {
         this.context = context;
     }
 
+    @JsonIgnore
     public Map<String, String> getExtraAttributes() {
         return extraAttributes;
     }
 
+    @JsonIgnore
     public void setExtraAttributes(Map<String, String> extraAttributes) {
         this.extraAttributes = extraAttributes;
     }
