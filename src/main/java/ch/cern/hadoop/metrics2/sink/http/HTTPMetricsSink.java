@@ -1,6 +1,8 @@
 package ch.cern.hadoop.metrics2.sink.http;
 
 import org.apache.commons.configuration.SubsetConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.metrics2.MetricsRecord;
 import org.apache.hadoop.metrics2.MetricsException;
 import org.apache.hadoop.metrics2.AbstractMetric;
@@ -10,6 +12,8 @@ import java.util.*;
 
 public class HTTPMetricsSink extends AbstractHTTPMetricsSink {
     
+    public final Log LOG = LogFactory.getLog(this.getClass());
+    
     public static final String EXTRA_ATTS_PARAM = "extraAttributes";
     private Map<String, String> extraAttributes;
 
@@ -18,6 +22,8 @@ public class HTTPMetricsSink extends AbstractHTTPMetricsSink {
         super.init(conf);
         
         extraAttributes = parsEextraAttributes(conf);
+        
+        LOG.info("Initialized with extra attributes: " + extraAttributes);
     }
 
     private Map<String, String> parsEextraAttributes(SubsetConfiguration conf) {
