@@ -33,7 +33,7 @@ public class HTTPMetricTest {
         JsonParser parser = new JsonParser();
         JsonElement element = parser.parse(metric.toJSON());
         JsonObject jsonParsed = element.getAsJsonObject();
-        System.out.println(metric.toJSON());
+        
         Assert.assertEquals(HTTPMetric.DATE_FORMAT.format(new Date(currentTime)), 
                             jsonParsed.get("updateTime").getAsString());
         
