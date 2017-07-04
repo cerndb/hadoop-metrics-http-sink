@@ -1,6 +1,6 @@
 # About the Hadoop Metrics HTTP Sink Plugin #
 
-**`hadoop-metrics-http-sink`** is an implementation of Hadoop Metrics2 plugin to push metrics to a HTTP end point (e.g. a distributed RESTful search engine).
+// **`hadoop-metrics-http-sink`** is an implementation of Hadoop Metrics2 plugin to push metrics to a HTTP end point (e.g. a distributed RESTful search engine).
 The sink is capable of collecting metrics of Hadoop applications that support Hadoop Metrics2 (e.g. hbase, kafka, etc.).
 
 # Build hadoop-metrics-http-sink.jar #
@@ -12,7 +12,9 @@ gradle clean build
 
 # Configuration #
 
-Add or create at /etc/hadoop/conf/hadoop-metrics2.properties
+JAR file hadoop-metrics-http-sink.jar needs to be added to Hadoop classpath. You might acheive that by copying it at /usr/lib/hadoop/lib/. 
+
+Add or create at /etc/hadoop/conf/hadoop-metrics2.properties the following.
 
 ```
 *.sink.http.class=ch.cern.hadoop.metrics2.sink.http.HTTPMetricsSink
